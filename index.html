@@ -12,18 +12,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="xlsx.full.min.js"></script>
 <script src="config.js?v=20261019b"></script>
-<script src="engine.js?v=20261019b"></script>
-<script src="targets.js?v=20261019b"></script>
 <script src="cloud.js?v=20261019b"></script>
-<script src="auth.js?v=2"></script>
-<script src="chart.min.js"></script>
-<script src="stock.js?v=20261019b"></script>
-<script src="order.js?v=20261019b"></script>
-<script src="credit.js?v=20261019b"></script>
-<script src="alloc.js?v=20261019b"></script>
-<script src="iq.js?v=20261019b"></script>
+<script src="auth.js?v=3"></script>
+<script>
+/* The application code is loaded ONLY when a login session exists on this device. Without one, only the login screen runs. */
+(function () {
+  var has = false; try { has = !!localStorage.getItem('itbSession'); } catch (e) { has = false; }
+  window.ITB_APP_LOADED = has;
+  if (!has) return;
+  ["xlsx.full.min.js", "engine.js?v=20261019b", "targets.js?v=20261019b", "chart.min.js", "stock.js?v=20261019b", "order.js?v=20261019b", "credit.js?v=20261019b", "alloc.js?v=20261019b", "iq.js?v=20261019b", "mobile.js?v=20261019b", "theme.js?v=20261019b"].forEach(function (f) { document.write('<script src="' + f + '"><\/script>'); });
+})();
+</script>
 <link rel="stylesheet" href="stock.css?v=20261019b">
 <link rel="stylesheet" href="order.css?v=20261019b">
 <link rel="stylesheet" href="credit.css?v=20261019b">
@@ -31,9 +31,6 @@
 <link rel="stylesheet" href="iq.css?v=20261019b">
 <link rel="stylesheet" href="mobile.css?v=20261019b">
 <link rel="stylesheet" href="theme.css?v=20261019b">
-<script src="mobile.js?v=20261019b"></script>
-<script src="theme.js?v=20261019b"></script>
-<script src="app.js?v=20261019f" defer></script>
 <style>
   :root{--blue:#1F36C7;--blue-d:#14238A;--ink:#1b2033;--muted:#6b7285;--line:#e3e6ef;--bg:#f4f6fb;--card:#fff;--ok:#1a7f4b;--ok-bg:#e6f5ec;--warn:#9a5b00;--warn-bg:#fff4df;--err:#b3261e;--err-bg:#fdecea;--info:#2456a6;--info-bg:#eaf1fc}
   *{box-sizing:border-box}
@@ -218,8 +215,6 @@
   .empty{padding:28px;text-align:center;color:var(--muted)}
 </style>
 <link rel="stylesheet" href="table-premium.css?v=20261019h">
-<script src="table-premium.js?v=20261019h" defer></script>
-<script src="table-picture.js?v=1" defer></script>
 <link rel="stylesheet" href="itbooster.css?v=2">
 <link rel="stylesheet" href="auth.css?v=2">
 </head>
@@ -436,5 +431,12 @@
   </div>
 </aside>
 <div id="overlay" class="overlay hidden"><div class="ov-box"><div class="spinner"></div><div id="ovText">Working…</div><div class="bar"><div class="bar-fill" id="ovBar"></div></div></div></div>
+<script>
+/* second half of the application code (needs the page to be parsed first) — again only with a login session */
+(function () {
+  if (!window.ITB_APP_LOADED) return;
+  ["app.js?v=20261019f", "table-premium.js?v=20261019h", "table-picture.js?v=1"].forEach(function (f) { document.write('<script src="' + f + '"><\/script>'); });
+})();
+</script>
 </body>
 </html>

@@ -75,7 +75,7 @@
   /* =========================================================================
    *  LOGIN / REGISTER SCREEN  (only on the main app page)
    * ========================================================================= */
-  if (document.getElementById('itbAdminPage')) return;
+  if (document.getElementById('itbAdminPage') || (document.body && document.body.hasAttribute('data-itb-nogate'))) return;
   const ic = (d, w) => `<svg viewBox="0 0 24 24" width="${w || 18}" height="${w || 18}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
   const BOLT = '<path d="M13 2 4 14h7l-1 8 9-12h-7z"/>';
   const $ = (id) => document.getElementById(id);
@@ -123,7 +123,6 @@
           <button class="ag-primary" id="agTrackBtn" type="submit">Check status</button>
         </form>
       </div>
-      <a class="ag-memo" href="memo-skipper.html">Open Memo Skipper <small>(no login needed)</small></a>
       <div class="ag-copy">© IT BOOSTER</div></div>`;
     document.body.insertBefore(g, document.body.firstChild);
     return g;
@@ -169,7 +168,7 @@
     $('agLogin').addEventListener('submit', async (e) => {
       e.preventDefault(); const btn = $('agLoginBtn'); say('agLoginMsg');
       busy(btn, true, 'Logging in…');
-      try { await login($('agId').value, $('agPw').value); unlock(); }
+      try { await login($('agId').value, $('agPw').value); if (window.ITB_APP_LOADED) unlock(); else location.reload(); }
       catch (err) { say('agLoginMsg', 'error', esc(err.message)); busy(btn, false); }
     });
 
