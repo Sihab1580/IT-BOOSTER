@@ -120,3 +120,19 @@ body.adm{margin:0;background:#F3F7FD;color:#0F1F3D;font-family:'Plus Jakarta San
   color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);transition:.15s}
 .ag-memo small{font-weight:600;color:#CFE0FF}
 .ag-memo:hover{background:rgba(255,255,255,.24)}
+
+/* ---- access-ending warning ---- */
+#itbExpiry{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;z-index:900;max-width:min(92vw,640px);display:flex;gap:12px;align-items:center;background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600;box-shadow:0 14px 30px -14px rgba(120,53,15,.5)}
+#itbExpiry button{border:none;background:rgba(0,0,0,.08);color:#92400E;border-radius:8px;cursor:pointer;padding:3px 8px}
+
+/* ---- admin: expiry + memo dashboard ---- */
+.adm-presets{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:2px 0 8px}
+.adm-presets small{color:#5B6B88;font-weight:600}
+.adm-presets .adm-btn{padding:5px 10px;font-size:12px}
+.adm-lbl{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:#334766}
+.adm-lbl .adm-search{margin:0}
+.adm-h{font-size:15px;color:#0A2A6B;margin:6px 0 8px}
+.adm-bar-c{position:relative;min-width:110px;height:24px;background:#EAF1FF;border-radius:7px;overflow:hidden}
+.adm-bar-c i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#FCA5A5,#EF4444)}
+.adm-bar-c span{position:relative;z-index:1;padding:0 8px;line-height:24px;font-weight:800;color:#7F1D1D}
+.adm-rowact{white-space:normal!important}

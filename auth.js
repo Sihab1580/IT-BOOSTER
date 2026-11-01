@@ -69,7 +69,16 @@
   }
   const regStatus = (rid) => rpc('itb_reg_status', { p_id: String(rid).trim() });
 
-  root.AUTH = { token, call, rpc, login, adminLogin, restore, logout, register, regStatus, getConfig, idKey, okId, esc, friendly,
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmtDay = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(String(iso || '')); return m ? m[3] + ' ' + MON[+m[2] - 1] + ' ' + m[1] : ''; };
+  /* warning text when the access ends within 7 days (Bangladesh time, ends at midnight); '' otherwise */
+  function expiryText(p) {
+    if (!p || p.role === 'admin' || !p.expiresOn || p.daysLeft == null || p.daysLeft > 7 || p.daysLeft < 0) return '';
+    if (p.daysLeft === 0) return 'Your access ends today at midnight (' + fmtDay(p.expiresOn) + '). Please contact the administrator to renew.';
+    return 'Your access ends in ' + p.daysLeft + ' day' + (p.daysLeft > 1 ? 's' : '') + ' (' + fmtDay(p.expiresOn) + ', at midnight). Please contact the administrator to renew.';
+  }
+
+  root.AUTH = { expiryText, fmtDay, token, call, rpc, login, adminLogin, restore, logout, register, regStatus, getConfig, idKey, okId, esc, friendly,
     profile: () => profile, session: () => S, lastReg: () => lsGet(RKEY), keyReady };
 
   /* =========================================================================
@@ -134,11 +143,29 @@
     $('agRegDone').classList.add('hidden');
   }
 
+
+  /* The old "View published data" card is hidden for good. Whenever the app is on that start screen,
+     go straight to the Upload page, where the menu (Sales, Stock, Order, Payout, Allocation, IQ, Memo Skipper) appears. */
+  function landOnFeatures() {
+    const vc = $('viewCard'), go = $('openUpload'); if (!vc || !go || vc.dataset.itbLand) return;
+    vc.dataset.itbLand = '1';
+    let n = 0, t0 = Date.now();
+    const check = () => {
+      if (vc.classList.contains('hidden')) return;
+      if (Date.now() - t0 > 2000) { t0 = Date.now(); n = 0; }
+      if (++n > 3) return;                                   // safety: never loop
+      go.click();
+    };
+    new MutationObserver(check).observe(vc, { attributes: true, attributeFilter: ['class'] });
+    check();
+  }
+
   function unlock() {
     const p = profile;
     document.body.classList.remove('itb-locked');
     const g = $('itbGate'); if (g) g.remove();
     const vm = $('viewMsg'); if (vm) { vm.className = 'alert hidden'; vm.innerHTML = ''; }
+    landOnFeatures();
     const rt = $('refreshTowns'); if (rt) rt.click();                  // reload the town list now that we are signed in
     const slot = $('mvActSlot') || document.querySelector('.top-actions');
     if (slot && !$('itbLogout')) {
@@ -148,6 +175,8 @@
       b.addEventListener('click', () => { logout(); location.reload(); });
       slot.insertBefore(b, slot.firstChild);
     }
+    const ex = expiryText(p);
+    if (ex) { const e = document.createElement('div'); e.id = 'itbExpiry'; e.innerHTML = '<span>' + esc(ex) + '</span><button type="button" aria-label="Dismiss">✕</button>'; e.querySelector('button').onclick = () => e.remove(); document.body.appendChild(e); }
     getConfig().then((c) => {
       if (!c.announcement) return;
       const n = document.createElement('div'); n.id = 'itbNotice'; n.innerHTML = '<span>' + esc(c.announcement) + '</span><button type="button" aria-label="Dismiss">✕</button>';

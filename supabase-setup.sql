@@ -1,7 +1,7 @@
 -- =============================================================================
 --  IT BOOSTER — Supabase database setup
 --  Run this WHOLE file ONCE in:  Supabase → SQL Editor → New query → paste → Run
---  Safe to run again later (it only creates what is missing / refreshes functions).
+--  Safe to run again later (it only creates what is missing / refreshes functions). Your data is kept.
 --
 --  Security model:
 --    • Tables are locked (Row Level Security ON, no public policies, no public grants).
@@ -28,6 +28,9 @@ create table if not exists public.itb_users (
   last_login   timestamptz,
   created_at   timestamptz not null default now()
 );
+
+-- access end date (last day of access, Bangladesh time; empty = no limit)
+alter table public.itb_users add column if not exists expires_on date;
 
 create table if not exists public.itb_regs (
   id         uuid primary key default gen_random_uuid(),
@@ -65,11 +68,24 @@ create table if not exists public.itb_towns (
   tk text primary key, name text not null, updated_ts bigint not null
 );
 
+-- daily Memo Skipper record: one row per user, day (Bangladesh time) and delivery man
+create table if not exists public.itb_memo_log (
+  id bigint generated always as identity primary key,
+  user_id bigint not null references public.itb_users(id) on delete cascade,
+  log_date date not null,
+  dm_name text not null,
+  total int not null default 0, valid int not null default 0, damage int not null default 0,
+  payout int not null default 0, skipped int not null default 0,
+  skipped_amount numeric(14,2) not null default 0, min_amount numeric(12,2),
+  updated_at timestamptz not null default now(),
+  unique (user_id, log_date, dm_name)
+);
+
 -- lock every table: RLS on, no policies, no direct access for the public roles
 do $$
 declare t text;
 begin
-  foreach t in array array['itb_users','itb_regs','itb_sessions','itb_config','itb_reports','itb_towns'] loop
+  foreach t in array array['itb_users','itb_regs','itb_sessions','itb_config','itb_reports','itb_towns','itb_memo_log'] loop
     execute format('alter table public.%I enable row level security', t);
     execute format('revoke all on public.%I from anon, authenticated', t);
   end loop;
@@ -82,9 +98,11 @@ language sql immutable set search_path = public as $$
 $$;
 
 create or replace function itb_private.user_json(u public.itb_users) returns json
-language sql immutable as $$
+language sql stable as $$
   select json_build_object('id', u.id, 'loginId', u.login_id, 'role', u.role, 'status', u.status, 'town', u.town, 'sap', u.sap,
-    'itName', u.it_name, 'house', u.house, 'email', u.email, 'itPhone', u.it_phone, 'mgrPhone', u.mgr_phone)
+    'itName', u.it_name, 'house', u.house, 'email', u.email, 'itPhone', u.it_phone, 'mgrPhone', u.mgr_phone,
+    'expiresOn', u.expires_on,
+    'daysLeft', case when u.expires_on is null then null else u.expires_on - (now() at time zone 'Asia/Dhaka')::date end)
 $$;
 
 -- validates a session token; p_admin = require an administrator
@@ -97,6 +115,9 @@ begin
    where s.token_hash = encode(digest(p_token, 'sha256'), 'hex') and s.expires_at > now();
   if not found then raise exception 'Your session has expired. Please log in again.'; end if;
   if u.status <> 'active' then raise exception 'Your account is not active. Please contact the administrator.'; end if;
+  if u.role <> 'admin' and u.expires_on is not null and (now() at time zone 'Asia/Dhaka')::date > u.expires_on then
+    raise exception 'Your access ended on %. Please contact the administrator.', to_char(u.expires_on, 'DD Mon YYYY');
+  end if;
   if p_admin and u.role <> 'admin' then raise exception 'Administrator access only.'; end if;
   if u.role <> 'admin' then
     select * into c from public.itb_config where id = 1;
@@ -173,6 +194,9 @@ begin
   end if;
   if u.status <> 'active' then
     return json_build_object('error', 'Your account is suspended. Please contact the administrator.');
+  end if;
+  if u.role <> 'admin' and u.expires_on is not null and (now() at time zone 'Asia/Dhaka')::date > u.expires_on then
+    return json_build_object('error', 'Your access ended on ' || to_char(u.expires_on, 'DD Mon YYYY') || '. Please contact the administrator.');
   end if;
   if u.role <> 'admin' then
     select * into c from public.itb_config where id = 1;
@@ -257,14 +281,16 @@ begin
   a := itb_private.who(p_token, true);
   select coalesce(json_agg(json_build_object('_id', id, 'loginId', login_id, 'role', role, 'status', status, 'town', town, 'sap', sap,
       'itName', it_name, 'house', house, 'email', email, 'itPhone', it_phone, 'mgrPhone', mgr_phone,
-      'createdAt', (extract(epoch from created_at) * 1000)::bigint) order by login_id), '[]'::json) into j
+      'createdAt', (extract(epoch from created_at) * 1000)::bigint, 'expiresOn', expires_on,
+      'daysLeft', case when expires_on is null then null else expires_on - (now() at time zone 'Asia/Dhaka')::date end) order by login_id), '[]'::json) into j
     from public.itb_users;
   return j;
 end $$;
 
-create or replace function public.itb_admin_approve(p_token text, p_reg_id text, p_town text, p_login_id text, p_password text) returns json
+drop function if exists public.itb_admin_approve(text, text, text, text, text);
+create or replace function public.itb_admin_approve(p_token text, p_reg_id text, p_town text, p_login_id text, p_password text, p_expires_on text) returns json
 language plpgsql security definer set search_path = public, extensions, itb_private as $$
-declare a public.itb_users; r public.itb_regs;
+declare a public.itb_users; r public.itb_regs; v_exp date;
         v_id text := upper(btrim(coalesce(p_login_id, '')));
         v_town text := regexp_replace(btrim(coalesce(p_town, '')), '\s+', ' ', 'g');
 begin
@@ -275,9 +301,10 @@ begin
   if v_town = '' then raise exception 'Town is required.'; end if;
   if v_id !~ '^[A-Z0-9_-]{3,30}$' then raise exception 'User ID: 3 to 30 letters, numbers, - or _ only.'; end if;
   if length(coalesce(p_password, '')) < 6 then raise exception 'Password must be at least 6 characters.'; end if;
+  begin v_exp := nullif(btrim(coalesce(p_expires_on, '')), '')::date; exception when others then raise exception 'Invalid access end date.'; end;
   if exists (select 1 from public.itb_users where login_id = v_id) then raise exception 'User ID % is already taken.', v_id; end if;
-  insert into public.itb_users (login_id, pass_hash, role, status, town, sap, it_name, house, email, it_phone, mgr_phone, reg_id)
-  values (v_id, crypt(p_password, gen_salt('bf')), 'user', 'active', v_town, r.sap, r.it_name, r.house, r.email, r.it_phone, r.mgr_phone, r.id);
+  insert into public.itb_users (login_id, pass_hash, role, status, town, sap, it_name, house, email, it_phone, mgr_phone, reg_id, expires_on)
+  values (v_id, crypt(p_password, gen_salt('bf')), 'user', 'active', v_town, r.sap, r.it_name, r.house, r.email, r.it_phone, r.mgr_phone, r.id, v_exp);
   update public.itb_regs set status = 'approved', login_id = v_id, town = v_town, decided_at = now() where id = r.id;
   return json_build_object('loginId', v_id);
 end $$;
@@ -332,6 +359,68 @@ begin
   a := itb_private.who(p_token, true);
   update public.itb_config set enabled = coalesce(p_enabled, true), registration_open = coalesce(p_reg_open, true),
          message = left(coalesce(p_message, ''), 300), announcement = left(coalesce(p_announcement, ''), 300) where id = 1;
+end $$;
+
+create or replace function public.itb_admin_set_expiry(p_token text, p_user_id text, p_expires_on text) returns void
+language plpgsql security definer set search_path = public, extensions, itb_private as $$
+declare a public.itb_users; v_uid bigint := p_user_id::bigint; v_exp date;
+begin
+  a := itb_private.who(p_token, true);
+  begin v_exp := nullif(btrim(coalesce(p_expires_on, '')), '')::date; exception when others then raise exception 'Invalid access end date.'; end;
+  update public.itb_users set expires_on = v_exp where id = v_uid and role <> 'admin';
+  if not found then raise exception 'User not found.'; end if;
+end $$;
+
+-- ------------------------------------------------- daily Memo Skipper record --
+create or replace function public.itb_memo_log_save(p_token text, p_rows json) returns void
+language plpgsql security definer set search_path = public, extensions, itb_private as $$
+declare u public.itb_users; r json; n int := 0; v_date date := (now() at time zone 'Asia/Dhaka')::date;
+begin
+  u := itb_private.who(p_token);
+  if p_rows is null or json_typeof(p_rows) <> 'array' then raise exception 'Invalid data.'; end if;
+  for r in select value from json_array_elements(p_rows) loop
+    n := n + 1;
+    if n > 300 then raise exception 'Too many rows.'; end if;
+    insert into public.itb_memo_log (user_id, log_date, dm_name, total, valid, damage, payout, skipped, skipped_amount, min_amount, updated_at)
+    values (u.id, v_date, left(coalesce(nullif(btrim(r->>'dm'), ''), '-'), 120),
+            greatest(0, coalesce((r->>'total')::int, 0)), greatest(0, coalesce((r->>'valid')::int, 0)), greatest(0, coalesce((r->>'damage')::int, 0)),
+            greatest(0, coalesce((r->>'payout')::int, 0)), greatest(0, coalesce((r->>'skipped')::int, 0)),
+            greatest(0, coalesce((r->>'skippedAmount')::numeric, 0)), (r->>'minAmount')::numeric, now())
+    on conflict (user_id, log_date, dm_name) do update
+      set total = excluded.total, valid = excluded.valid, damage = excluded.damage, payout = excluded.payout, skipped = excluded.skipped,
+          skipped_amount = excluded.skipped_amount, min_amount = excluded.min_amount, updated_at = now();
+  end loop;
+end $$;
+
+create or replace function public.itb_memo_log_mine(p_token text, p_days int default 30) returns json
+language plpgsql security definer set search_path = public, extensions, itb_private as $$
+declare u public.itb_users; j json;
+        v_from date := (now() at time zone 'Asia/Dhaka')::date - (least(greatest(coalesce(p_days, 30), 1), 366) - 1);
+begin
+  u := itb_private.who(p_token);
+  select coalesce(json_agg(x order by x."date" desc), '[]'::json) into j from (
+    select l.log_date as "date", count(*)::int as "dms", sum(l.total)::int as "total", sum(l.valid)::int as "valid", sum(l.damage)::int as "damage",
+           sum(l.payout)::int as "payout", sum(l.skipped)::int as "skipped", round(sum(l.skipped_amount), 2) as "skippedAmount"
+      from public.itb_memo_log l where l.user_id = u.id and l.log_date >= v_from group by l.log_date) x;
+  return j;
+end $$;
+
+create or replace function public.itb_admin_memo_log(p_token text, p_from text, p_to text) returns json
+language plpgsql security definer set search_path = public, extensions, itb_private as $$
+declare a public.itb_users; j json; v_from date; v_to date;
+begin
+  a := itb_private.who(p_token, true);
+  begin
+    v_to := coalesce(nullif(btrim(coalesce(p_to, '')), '')::date, (now() at time zone 'Asia/Dhaka')::date);
+    v_from := coalesce(nullif(btrim(coalesce(p_from, '')), '')::date, v_to - 29);
+  exception when others then raise exception 'Invalid date.'; end;
+  select coalesce(json_agg(y order by y."date" desc, y."loginId"), '[]'::json) into j from (
+    select l.log_date as "date", us.login_id as "loginId", us.town as "town", us.it_name as "itName",
+           sum(l.total)::int as "total", sum(l.valid)::int as "valid", sum(l.damage)::int as "damage", sum(l.payout)::int as "payout",
+           sum(l.skipped)::int as "skipped", round(sum(l.skipped_amount), 2) as "skippedAmount"
+      from public.itb_memo_log l join public.itb_users us on us.id = l.user_id
+     where l.log_date between v_from and v_to group by l.log_date, us.login_id, us.town, us.it_name) y;
+  return j;
 end $$;
 
 -- ------------------------------------------------------------- permissions ---

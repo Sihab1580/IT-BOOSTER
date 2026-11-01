@@ -148,3 +148,6 @@ body.mv .table-wrap::-webkit-scrollbar-track{background:#F0F5FD}
 #mvSide a.nav-btn{text-decoration:none;box-sizing:border-box;cursor:pointer}
 #mvSide a.nav-btn:hover{background:rgba(255,255,255,.10);color:#fff}
 body.mv-collapsed #mvSide a.nav-btn{font-size:0;gap:0;justify-content:center;padding:12px 0}
+
+/* ---- "View published data" card: permanently hidden (the app opens straight on the Upload page after login) ---- */
+#viewCard{display:none!important}

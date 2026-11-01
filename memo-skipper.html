@@ -98,6 +98,18 @@ input[type=checkbox]{accent-color:#2563EB;width:16px;height:16px;cursor:pointer}
 .gd{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#0A2A6B 0%,#1239A0 55%,#1D4ED8 100%)}
 .gd-card{background:#fff;border-radius:20px;padding:28px 26px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 60px -28px rgba(5,20,70,.75)}
 .gd-card h2{font-size:19px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.exp{background:#FEF3C7;color:#92400E;border-bottom:1px solid #FCD34D;padding:9px 20px;font-weight:700;font-size:13px;text-align:center}
+.gf{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:14px}
+.gf label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:#334766}
+.gf select{font:inherit;font-size:13px;padding:8px 10px;border:1px solid #C6D4EC;border-radius:9px;background:#fff;color:var(--ink);min-width:190px}
+.gfn{color:var(--muted);font-size:12px;flex:1;min-width:200px}
+.tb-btns{display:flex;gap:6px;flex-wrap:wrap}
+.dt2{color:#94A3B8;font-size:11px}
+.rec table{min-width:760px}
+.rec tfoot td{background:var(--ice);border-top:2px solid #BFD4FB}
+.rbar{position:relative;min-width:110px;height:24px;background:var(--ice2);border-radius:7px;overflow:hidden}
+.rbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#FCA5A5,#EF4444)}
+.rbar span{position:relative;z-index:1;padding:0 8px;line-height:24px;font-weight:800;color:#7F1D1D}
 .toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0A2A6B;color:#fff;border-radius:12px;padding:11px 16px;font-weight:600;font-size:13.5px;z-index:200;max-width:92vw;box-shadow:0 14px 30px -14px rgba(5,20,70,.7)}
 </style>
 </head>
@@ -122,6 +134,7 @@ input[type=checkbox]{accent-color:#2563EB;width:16px;height:16px;cursor:pointer}
   <a class="tbtn" href="index.html" style="text-decoration:none">&larr; IT BOOSTER</a>
   <button class="tbtn" id="memoLogout" type="button">Log out</button>
 </header>
+<div id="memoExpiry" class="exp hidden"></div>
 
 <main>
   <section class="card" id="upCard">
@@ -144,7 +157,19 @@ input[type=checkbox]{accent-color:#2563EB;width:16px;height:16px;cursor:pointer}
   </section>
 
   <div class="kpis hidden" id="kpis"></div>
+  <div class="gf hidden" id="gf">
+    <label>Order date<select id="gOrder"></select></label>
+    <label>Delivery date<select id="gDeliv"></select></label>
+    <span class="gfn">Applies to every delivery man below. You can also change it for one delivery man.</span>
+  </div>
   <div id="results"></div>
+  <section class="card" id="recCard">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+      <div><h2>Daily record</h2><p class="sub" style="margin-bottom:10px">Memos you processed and skipped each day, saved automatically (last 30 days, Bangladesh time).</p></div>
+      <button class="btn sm sec" id="recRefresh" type="button">Refresh</button>
+    </div>
+    <div id="recBody"><div class="empty">Loading…</div></div>
+  </section>
   <p class="note">Delivery-man and outlet lists are saved in this browser only. Clearing browser data removes them.</p>
 </main>
 
@@ -177,7 +202,7 @@ input[type=checkbox]{accent-color:#2563EB;width:16px;height:16px;cursor:pointer}
 
 
 <script src="config.js?v=20261019b"></script>
-<script src="auth.js?v=3"></script>
+<script src="auth.js?v=5"></script>
 <script>
 /* Memo Skipper is available only to logged-in users. Nothing below runs until the server confirms the session. */
 (function () {
@@ -191,9 +216,10 @@ input[type=checkbox]{accent-color:#2563EB;width:16px;height:16px;cursor:pointer}
     try {
       await add('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js');
       await add('https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js');
-      await add('memo-skipper.js?v=2');
+      await add('memo-skipper.js?v=3');
     } catch (e) { stop('Could not load', 'Check your internet connection and reload the page.', false); return; }
     $('guard').classList.add('hidden'); $('app').classList.remove('hidden');
+    var ex = AUTH.expiryText(AUTH.profile()); if (ex) { $('memoExpiry').textContent = ex; $('memoExpiry').classList.remove('hidden'); }
     $('memoLogout').addEventListener('click', function () { AUTH.logout(); location.href = 'index.html'; });
   })();
 })();
