@@ -165,18 +165,12 @@
   }
 
   function enter() {
-    $('admLogin').classList.add('hidden'); $('admApp').classList.remove('hidden');
+    $('admApp').classList.remove('hidden'); $('admWait').classList.add('hidden');
     $('admWho').textContent = (A.profile() || {}).loginId || '';
     loadAll().catch((e) => toast('error', esc(e.message)));
   }
   function init() {
-    $('admForm').addEventListener('submit', async (e) => {
-      e.preventDefault(); const btn = $('admLoginBtn'); say('admLoginMsg'); btn.disabled = true; btn.textContent = 'Logging in…';
-      try { await A.adminLogin($('admEmail').value, $('admPw').value); enter(); }
-      catch (err) { say('admLoginMsg', 'error', esc(err.message)); }
-      btn.disabled = false; btn.textContent = 'Log in';
-    });
-    $('admOut').addEventListener('click', () => { A.logout(); location.reload(); });
+    $('admOut').addEventListener('click', () => { A.logout(); location.replace('index.html'); });
     $('admRefresh').addEventListener('click', () => run(async () => {}, 'Refreshed.'));
     $('admTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; st.tab = b.dataset.t; st.open = null;
       document.querySelectorAll('#admTabs button').forEach((x) => x.classList.toggle('on', x === b));
@@ -196,8 +190,8 @@
       try { await A.call('itb_admin_config_set', { p_enabled: body.enabled, p_reg_open: body.registrationOpen, p_message: body.message, p_announcement: body.announcement }); st.cfg = body; say('cMsgOut', 'ok', 'Saved. The change is live for all users.'); setTimeout(() => say('cMsgOut'), 4000); }
       catch (e) { say('cMsgOut', 'error', esc(e.message)); }
     });
-    if (!A.keyReady()) say('admLoginMsg', 'warn', '<b>Setup needed:</b> add the Supabase URL and key in <code>config.js</code>.');
-    A.restore(true).then((p) => { if (p) enter(); });
+    // one shared login: no session (or not an administrator) → go to the normal login page
+    A.restore(true).then((p) => { if (p) enter(); else location.replace('index.html'); }).catch(() => location.replace('index.html'));
   }
   init();
 })();

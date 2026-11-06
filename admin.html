@@ -13,18 +13,7 @@
 </head>
 <body id="itbAdminPage" class="adm">
 
-<section id="admLogin" class="adm-login">
-  <div class="ag-wrap">
-    <div class="ag-brand"><span class="ag-logo"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><div><b>IT BOOSTER</b><small>Administrator</small></div></div>
-    <form class="ag-card" id="admForm" novalidate>
-      <h2>Admin login</h2><p class="ag-sub">Sign in with your administrator User ID and password.</p>
-      <label>Admin User ID<input id="admEmail" type="text" autocomplete="username" autocapitalize="characters" spellcheck="false" placeholder="e.g. ADMIN"></label>
-      <label>Password<input id="admPw" type="password" autocomplete="current-password" placeholder="Password"></label>
-      <div id="admLoginMsg" class="ag-msg hidden"></div>
-      <button class="ag-primary" id="admLoginBtn" type="submit">Log in</button>
-    </form>
-  </div>
-</section>
+<section id="admWait" class="adm-login"><div class="ag-wrap"><div class="ag-card" style="text-align:center"><h2>Checking your login…</h2><p class="ag-sub">You will be taken to the login page if needed.</p></div></div></section>
 
 <div id="admApp" class="hidden">
   <header class="adm-top">
@@ -35,7 +24,7 @@
       <button data-t="memo">Memo dashboard</button>
       <button data-t="ctrl">App control</button>
     </nav>
-    <div class="adm-right"><span id="admWho" class="adm-who"></span><button type="button" id="admOut" class="adm-btn">Log out</button></div>
+    <div class="adm-right"><a class="adm-btn" href="index.html?app=1" style="text-decoration:none">Open IT BOOSTER app</a><span id="admWho" class="adm-who"></span><button type="button" id="admOut" class="adm-btn">Log out</button></div>
   </header>
 
   <main class="adm-main">
@@ -84,7 +73,7 @@
 </div>
 
 <script src="config.js?v=20261019b"></script>
-<script src="auth.js?v=5"></script>
-<script src="admin.js?v=2"></script>
+<script src="auth.js?v=7"></script>
+<script src="admin.js?v=3"></script>
 </body>
 </html>

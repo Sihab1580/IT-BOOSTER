@@ -146,6 +146,7 @@
 
   /* The old "View published data" card is hidden for good. Whenever the app is on that start screen,
      go straight to the Upload page, where the menu (Sales, Stock, Order, Payout, Allocation, IQ, Memo Skipper) appears. */
+  const wantApp = () => /[?&]app=1/.test(location.search);        // an administrator who chose "Open IT BOOSTER app"
   function landOnFeatures() {
     const vc = $('viewCard'), go = $('openUpload'); if (!vc || !go || vc.dataset.itbLand) return;
     vc.dataset.itbLand = '1';
@@ -175,6 +176,12 @@
       b.addEventListener('click', () => { logout(); location.reload(); });
       slot.insertBefore(b, slot.firstChild);
     }
+    if (slot && p.role === 'admin' && !$('itbAdminLink')) {
+      const ad = document.createElement('button'); ad.type = 'button'; ad.id = 'itbAdminLink'; ad.className = 'menu-btn';
+      ad.innerHTML = ic('<path d="M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"/>', 15) + ' Admin panel';
+      ad.addEventListener('click', () => { location.href = 'admin.html'; });
+      slot.insertBefore(ad, slot.firstChild);
+    }
     const ex = expiryText(p);
     if (ex) { const e = document.createElement('div'); e.id = 'itbExpiry'; e.innerHTML = '<span>' + esc(ex) + '</span><button type="button" aria-label="Dismiss">✕</button>'; e.querySelector('button').onclick = () => e.remove(); document.body.appendChild(e); }
     getConfig().then((c) => {
@@ -197,7 +204,9 @@
     $('agLogin').addEventListener('submit', async (e) => {
       e.preventDefault(); const btn = $('agLoginBtn'); say('agLoginMsg');
       busy(btn, true, 'Logging in…');
-      try { await login($('agId').value, $('agPw').value); if (window.ITB_APP_LOADED) unlock(); else location.reload(); }
+      try { await login($('agId').value, $('agPw').value);
+        if (profile && profile.role === 'admin' && !wantApp()) { location.replace('admin.html'); return; }       // administrator → admin panel
+        if (window.ITB_APP_LOADED) unlock(); else location.reload(); }
       catch (err) { say('agLoginMsg', 'error', esc(err.message)); busy(btn, false); }
     });
 
@@ -247,7 +256,9 @@
     if (!keyReady()) say('agLoginMsg', 'warn', '<b>Setup needed:</b> add the Supabase URL and key in <code>config.js</code>.');
 
     // already signed in on this device?
-    if (lsGet(SKEY)) { document.body.classList.add('itb-restoring'); const p = await restore(false); document.body.classList.remove('itb-restoring'); if (p) unlock(); }
+    if (lsGet(SKEY)) { document.body.classList.add('itb-restoring'); const p = await restore(false); document.body.classList.remove('itb-restoring');
+      if (p && p.role === 'admin' && !wantApp()) { location.replace('admin.html'); return; }
+      if (p) unlock(); }
   }
   function lastRegId() { return lsGet(RKEY) || ''; }
 

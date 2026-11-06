@@ -1,0 +1,116 @@
+/* =============================================================================
+ *  MEMO SKIPPER (inside the main app) — every rule is scoped to #memoCard
+ *  Shown only when the "Memo Skipper" menu item is open (body.itb-memo).
+ * ============================================================================= */
+#memoCard{display:none}
+body.itb-memo #memoCard{display:block}
+body.itb-memo main > *:not(#memoCard){display:none!important}
+
+#memoCard{--navy:#0A2A6B;--blue:#2563EB;--blue-d:#1E40AF;--ice:#EFF5FF;--ice2:#E3EDFE;--line:#DCE6F5;--ink:#0F1F3D;--muted:#5B6B88;
+  --ok:#047857;--ok-bg:#D1FAE5;--warn:#92400E;--warn-bg:#FEF3C7;--err:#B91C1C;--err-bg:#FEE2E2;--info:#0369A1;--info-bg:#E0F2FE;color:var(--ink)}
+#memoCard *{box-sizing:border-box}
+#memoCard .ms-hidden{display:none!important}
+#memoCard button{font:inherit;cursor:pointer}
+
+#memoCard .ms-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+#memoCard .ms-head h2{font-size:20px;font-weight:800;color:var(--navy);margin:0 0 4px}
+#memoCard .ms-sub{color:var(--muted);font-size:13px;line-height:1.5;margin:0 0 12px}
+#memoCard .ms-head .ms-sub{margin:0}
+#memoCard .ms-head-r{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#memoCard .ms-min{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #C6D4EC;border-radius:10px;padding:4px 6px 4px 12px;font-size:12.5px;font-weight:700;color:var(--navy)}
+#memoCard .ms-min input{width:84px;border:1px solid var(--line);border-radius:7px;padding:6px 8px;font:inherit;font-weight:800;color:var(--navy);text-align:center;outline:none;background:#fff}
+
+#memoCard .ms-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:0 1px 2px rgba(10,42,107,.04),0 10px 28px -22px rgba(10,42,107,.35);margin-bottom:16px}
+#memoCard .ms-card h2{font-size:17px;font-weight:800;color:var(--navy);margin:0 0 4px}
+
+#memoCard .ms-up{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:stretch}
+#memoCard .ms-drop{border:2px dashed #9DB8EE;background:#F7FAFF;border-radius:14px;padding:26px 16px;text-align:center;color:var(--blue-d);font-weight:700;cursor:pointer;transition:.15s}
+#memoCard .ms-drop:hover,#memoCard .ms-drop.ms-over{background:var(--ice2);border-color:var(--blue)}
+#memoCard .ms-drop small{display:block;color:var(--muted);font-weight:500;margin-top:4px}
+#memoCard .ms-fileinfo{margin-top:8px;font-weight:700;color:var(--blue-d);font-size:13px}
+@media(max-width:700px){#memoCard .ms-up{grid-template-columns:1fr}}
+
+#memoCard .ms-btn{border:none;border-radius:11px;padding:11px 20px;font-weight:800;font-size:14px;color:#fff;background:linear-gradient(135deg,#2563EB,#1E40AF);box-shadow:0 12px 22px -12px rgba(30,64,175,.85)}
+#memoCard .ms-btn:hover:not(:disabled){filter:brightness(1.08)}
+#memoCard .ms-btn:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+#memoCard .ms-btn.ms-sec{background:#fff;color:var(--blue-d);border:1px solid #C6D4EC;box-shadow:none}
+#memoCard .ms-btn.ms-sec:hover:not(:disabled){background:var(--ice)}
+#memoCard .ms-btn.ms-sm{padding:7px 12px;font-size:12.5px;border-radius:9px}
+#memoCard .ms-btn.ms-danger{background:#fff;color:var(--err);border:1px solid #FECACA;box-shadow:none}
+
+#memoCard .ms-prog{height:10px;background:var(--ice2);border-radius:99px;overflow:hidden;margin:12px 0 6px}
+#memoCard .ms-prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2563EB,#60A5FA);transition:width .15s}
+
+#memoCard .ms-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+#memoCard .ms-kpi{background:#fff;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:14px;padding:11px 14px}
+#memoCard .ms-kpi small{display:block;color:var(--muted);font-weight:700;font-size:11px;letter-spacing:.05em;text-transform:uppercase}
+#memoCard .ms-kpi b{font-size:24px;color:var(--navy)}
+#memoCard .ms-kpi.ms-ok{border-left-color:#10B981}#memoCard .ms-kpi.ms-info{border-left-color:#0EA5E9}
+#memoCard .ms-kpi.ms-warn{border-left-color:#F59E0B}#memoCard .ms-kpi.ms-err{border-left-color:#EF4444}
+
+#memoCard .ms-gf{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:14px}
+#memoCard .ms-gf label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:#334766}
+#memoCard .ms-gf select{font:inherit;font-size:13px;padding:8px 10px;border:1px solid #C6D4EC;border-radius:9px;background:#fff;color:var(--ink);min-width:210px}
+#memoCard .ms-gfn{color:var(--muted);font-size:12px;flex:1;min-width:200px}
+
+#memoCard .ms-dm{background:#fff;border:1px solid var(--line);border-radius:16px;margin-bottom:14px;overflow:hidden;box-shadow:0 8px 24px -22px rgba(10,42,107,.45)}
+#memoCard .ms-dmh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 18px;cursor:pointer}
+#memoCard .ms-dmh:hover{background:#F7FAFF}
+#memoCard .ms-t{flex:1;min-width:220px}
+#memoCard .ms-n{font-size:16px;font-weight:800;color:var(--navy);margin-bottom:7px}
+#memoCard .ms-pills{display:flex;gap:7px;flex-wrap:wrap}
+#memoCard .ms-pill{border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;background:var(--ice);color:var(--blue-d);border:1px solid var(--ice2)}
+#memoCard .ms-pill.ms-ok{background:var(--ok-bg);color:var(--ok);border-color:#A7F3D0}
+#memoCard .ms-pill.ms-info{background:var(--info-bg);color:var(--info);border-color:#BAE6FD}
+#memoCard .ms-pill.ms-warn{background:var(--warn-bg);color:var(--warn);border-color:#FDE68A}
+#memoCard .ms-pill.ms-err{background:var(--err-bg);color:var(--err);border-color:#FECACA}
+#memoCard .ms-dmh select{font:inherit;font-size:12px;padding:6px 9px;border:1px solid #C6D4EC;border-radius:8px;background:#fff;color:var(--ink);max-width:200px}
+#memoCard .ms-chev{color:var(--muted);font-weight:800;padding:0 4px;transition:transform .15s}
+#memoCard .ms-dm.ms-open .ms-chev{transform:rotate(180deg)}
+#memoCard .ms-dmb{display:none;border-top:1px solid var(--line);background:#FAFCFF}
+#memoCard .ms-dm.ms-open .ms-dmb{display:block}
+#memoCard .ms-tabs{display:flex;gap:6px;padding:0 14px;background:var(--ice);border-bottom:1px solid var(--line)}
+#memoCard .ms-tab{border:none;background:none;padding:12px 14px;font-weight:700;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
+#memoCard .ms-tab.ms-on{color:var(--blue-d);border-bottom-color:var(--blue);background:#fff}
+#memoCard .ms-tbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:#fff;border-bottom:1px solid var(--line)}
+#memoCard .ms-tbar>span{font-weight:700;color:var(--muted);font-size:13px}
+#memoCard .ms-tbar.ms-sk{background:#FEF2F2}#memoCard .ms-tbar.ms-sk>span{color:var(--err)}
+#memoCard .ms-tbb{display:flex;gap:6px;flex-wrap:wrap}
+#memoCard .ms-tw{overflow-x:auto;background:#fff}
+#memoCard table{width:100%;border-collapse:collapse;min-width:720px}
+#memoCard th{background:var(--ice);color:var(--navy);text-align:left;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:10px 14px;border-bottom:2px solid #BFD4FB;position:static}
+#memoCard td{padding:10px 14px;border-bottom:1px solid #EAF0FA;vertical-align:middle;white-space:normal}
+#memoCard tbody tr:hover td{background:#F7FAFF}
+#memoCard .ms-empty{padding:28px;text-align:center;color:var(--muted)}
+#memoCard .ms-badge{display:inline-block;border-radius:99px;padding:4px 11px;font-size:11px;font-weight:800;white-space:nowrap}
+#memoCard .ms-b-ok{background:var(--ok-bg);color:var(--ok)}#memoCard .ms-b-dmg{background:var(--info-bg);color:var(--info)}
+#memoCard .ms-b-po{background:var(--warn-bg);color:var(--warn)}#memoCard .ms-b-sk{background:var(--err-bg);color:var(--err)}
+#memoCard input[type=checkbox]{accent-color:#2563EB;width:16px;height:16px;cursor:pointer}
+#memoCard .ms-dt{font-size:11.5px;color:var(--muted);line-height:1.5}
+#memoCard .ms-dt2{color:#94A3B8;font-size:11px}
+#memoCard .ms-amt{font-weight:800;color:var(--blue-d)}#memoCard .ms-amt.ms-r{color:var(--err)}
+#memoCard .ms-rec table{min-width:760px}
+#memoCard .ms-rec tfoot td{background:var(--ice);border-top:2px solid #BFD4FB}
+#memoCard .ms-rbar{position:relative;min-width:110px;height:24px;background:var(--ice2);border-radius:7px;overflow:hidden}
+#memoCard .ms-rbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#FCA5A5,#EF4444)}
+#memoCard .ms-rbar span{position:relative;z-index:1;padding:0 8px;line-height:24px;font-weight:800;color:#7F1D1D}
+#memoCard .ms-note{color:var(--muted);font-size:12px;text-align:center;margin-top:18px}
+
+/* master data window */
+#memoCard .ms-ov{position:fixed;inset:0;background:rgba(10,42,107,.5);display:none;align-items:flex-start;justify-content:center;z-index:1500;padding:5vh 12px;overflow:auto}
+#memoCard .ms-ov.ms-on{display:flex}
+#memoCard .ms-md{background:#fff;border-radius:18px;width:100%;max-width:820px;padding:20px 22px;box-shadow:0 30px 60px -28px rgba(5,20,70,.75)}
+#memoCard .ms-mh{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+#memoCard .ms-mh h3{font-size:17px;color:var(--navy);font-weight:800;margin:0}
+#memoCard .ms-x{border:none;background:var(--ice);color:var(--blue-d);width:32px;height:32px;border-radius:50%;font-size:18px}
+#memoCard .ms-seg{display:flex;background:var(--ice2);border-radius:11px;padding:3px;gap:2px;margin-bottom:14px;width:max-content;max-width:100%}
+#memoCard .ms-seg button{border:none;background:transparent;font-weight:700;font-size:13px;color:#4B5E80;padding:8px 14px;border-radius:8px}
+#memoCard .ms-seg button.ms-on{background:#fff;color:var(--blue-d);box-shadow:0 1px 3px rgba(10,42,107,.2)}
+#memoCard .ms-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
+#memoCard .ms-fld{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:#334766}
+#memoCard .ms-fld input,#memoCard .ms-srch{font:inherit;font-size:14px;padding:9px 11px;border:1px solid #C6D4EC;border-radius:9px;outline:none;color:var(--ink);background:#fff}
+#memoCard .ms-fld input:focus,#memoCard .ms-srch:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.16)}
+#memoCard .ms-mscroll{max-height:320px;overflow:auto;border:1px solid var(--line);border-radius:10px}
+#memoCard .ms-mscroll table{min-width:0}
+#memoCard .ms-mst{font-size:12.5px;font-weight:700;margin-top:8px;color:var(--muted)}
+.ms-toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#0A2A6B;color:#fff;border-radius:12px;padding:11px 16px;font-weight:600;font-size:13.5px;z-index:2500;max-width:92vw;box-shadow:0 14px 30px -14px rgba(5,20,70,.7)}

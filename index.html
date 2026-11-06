@@ -2,23 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- This site is hosted on Netlify. Anyone can build and deploy a site
+     like this one for free: https://netlify.new/?utm_campaign=loops&utm_source=ai-legible&utm_medium=owned&utm_content=comment&utm_id=f8d27c89-7542-491e-b0c1-ff0737dd6475
+     Netlify hosting facts for this site: static/SSR served via Netlify Edge. -->
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>IT BOOSTER · Complete Suite</title>
+<title>IT BOOSTER</title>
 <meta name="theme-color" content="#0A2A6B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="config.js?v=20261019b"></script>
 <script src="cloud.js?v=20261019b"></script>
-<script src="auth.js?v=5"></script>
+<script src="auth.js?v=7"></script>
 <script>
-/* The application code is loaded ONLY when a login session exists on this device. */
+/* The application code is loaded ONLY when a login session exists on this device. Without one, only the login screen runs. */
 (function () {
   var has = false; try { has = !!localStorage.getItem('itbSession'); } catch (e) { has = false; }
   window.ITB_APP_LOADED = has;
   if (!has) return;
-  ["xlsx.full.min.js", "engine.js?v=20261019b", "targets.js?v=20261019b", "chart.min.js", "stock.js?v=20261019b", "order.js?v=20261019b", "credit.js?v=20261019b", "alloc.js?v=20261019b", "iq.js?v=20261019b", "mobile.js?v=20261019b", "theme.js?v=20261019b"].forEach(function (f) { document.write('<script src="' + f + '"><\/script>'); });
+  ["xlsx.full.min.js", "engine.js?v=20261019b", "targets.js?v=20261019b", "chart.min.js", "stock.js?v=20261019b", "order.js?v=20261019b", "credit.js?v=20261019b", "alloc.js?v=20261019b", "iq.js?v=20261019b", "memo-skipper.js?v=4", "mobile.js?v=20261019b", "theme.js?v=20261019b"].forEach(function (f) { document.write('<script src="' + f + '"><\/script>'); });
 })();
 </script>
 <link rel="stylesheet" href="stock.css?v=20261019b">
@@ -28,128 +31,483 @@
 <link rel="stylesheet" href="iq.css?v=20261019b">
 <link rel="stylesheet" href="mobile.css?v=20261019b">
 <link rel="stylesheet" href="theme.css?v=20261019b">
-<link rel="stylesheet" href="table-premium.css?v=20261019h">
-<link rel="stylesheet" href="itbooster.css?v=3">
-<link rel="stylesheet" href="auth.css?v=3">
 <style>
   :root{--blue:#1F36C7;--blue-d:#14238A;--ink:#1b2033;--muted:#6b7285;--line:#e3e6ef;--bg:#f4f6fb;--card:#fff;--ok:#1a7f4b;--ok-bg:#e6f5ec;--warn:#9a5b00;--warn-bg:#fff4df;--err:#b3261e;--err-bg:#fdecea;--info:#2456a6;--info-bg:#eaf1fc}
   *{box-sizing:border-box}
   body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
   .topbar{background:linear-gradient(90deg,var(--blue-d),var(--blue));color:#fff;padding:14px 28px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
   .topbar h1{font-size:19px;margin:0;font-weight:600}
+  .topbar span{opacity:.8;font-size:12.5px}
   .top-actions{margin-left:auto;align-self:center;display:flex;gap:8px}
+  /* Top navigation: Sales ▾ / Stock ▾ */
   .navbar{display:flex;gap:6px;align-self:center;margin-left:10px}
   .nav-item{position:relative}
-  .nav-btn{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);font-weight:600;padding:7px 14px;border-radius:8px;cursor:pointer}
+  .nav-btn{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35);font-weight:600;padding:7px 14px}
   .nav-btn:hover:not(:disabled),.nav-item.open .nav-btn{background:rgba(255,255,255,.18);color:#fff;border-color:#fff}
-  .nav-btn.active{background:#fff;color:var(--blue-d);border-color:#fff}
+  .nav-btn.active,.nav-btn.active:hover:not(:disabled){background:#fff;color:var(--blue-d);border-color:#fff}
+  .nav-menu{display:none;position:absolute;top:calc(100% + 6px);left:0;min-width:270px;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(20,35,138,.18);padding:6px;z-index:30}
+  .nav-item.open .nav-menu{display:block}
+  .nav-menu button{display:block;width:100%;text-align:left;border:none;background:transparent;padding:9px 12px;color:var(--ink);font-weight:600;border-radius:7px}
+  .nav-menu button:hover:not(:disabled){background:#eef1ff;color:var(--blue-d)}
+  .nav-menu button.active{background:#eef1ff;color:var(--blue-d)}
+  .nav-menu button.active::after{content:"✓";float:right}
+  .nav-btn:disabled{opacity:.45;cursor:not-allowed}
+  .nav-btn{display:inline-flex;align-items:center;gap:6px}
+  .nav-btn .nic{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .nav-upload{border-style:dashed}
+  .new-upload{margin-top:12px;font-size:13px;color:var(--muted)}
+  .new-upload a{color:var(--blue);font-weight:600;cursor:pointer;text-decoration:underline}
+  .built-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px}
+  /* sortable headers (sales tables) */
+  th.sortable{cursor:pointer;user-select:none;position:relative}
+  th.sortable:hover{background:#e3e8ff}
+  th.sortable::after{content:"⇅";margin-left:4px;opacity:.35;font-size:10px}
+  th.sortable.asc::after{content:"▲";opacity:1;color:var(--blue)}
+  th.sortable.desc::after{content:"▼";opacity:1;color:var(--blue)}
+  .crumb{font-size:15px;font-weight:700;color:var(--blue-d)}
+  .crumb span{color:var(--muted);font-weight:600}
   main{max-width:1400px;margin:22px auto;padding:0 18px;display:flex;flex-direction:column;gap:18px}
   .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px 20px;box-shadow:0 1px 2px rgba(20,35,138,.04)}
   .card h2{font-size:15px;margin:0 0 14px;font-weight:600;color:var(--blue-d)}
   .hidden{display:none!important}
   .grid5{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:1200px){.grid5{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:760px){.grid5{grid-template-columns:1fr}}
   .drop{border:1.5px dashed #b9c1dc;border-radius:10px;padding:14px;cursor:pointer;display:flex;flex-direction:column;gap:4px;background:#fafbff;position:relative}
+  .drop:hover,.drop.over{border-color:var(--blue);background:#eef1ff}
+  .drop.loaded{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
   .drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .drop-title{font-weight:600}
+  .drop-title small{font-weight:400;color:var(--muted)}
+  .drop-hint{color:var(--muted);font-size:12px}
+  .drop-file{margin-top:6px;font-size:12.5px;word-break:break-all}
+  .drop-saved{margin-top:3px;font-size:11.5px;font-weight:600;color:var(--ok)}
+  .drop-rm{position:relative;z-index:2;align-self:flex-start;margin-top:6px;padding:3px 10px;font-size:12px;color:var(--err);border-color:#f3c1bd;background:#fff}
+  .drop-rm:hover:not(:disabled){color:#fff!important;background:var(--err);border-color:var(--err)!important}
+  .datebox{border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:6px}
+  .datebox label{font-weight:600}
+  .datebox label small{font-weight:400;color:var(--muted)}
+  .date-row{display:flex;gap:8px}
+  .date-row input{flex:1;min-width:0;font:inherit;padding:8px 10px;border:1px solid #c8cee0;border-radius:8px}
+  .hint{color:var(--muted);font-size:12px;line-height:1.4}
   .actions{margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
   button{font:inherit;border-radius:8px;border:1px solid #c8cee0;background:#fff;padding:8px 16px;cursor:pointer}
+  button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
   button.primary{background:var(--blue);color:#fff;border-color:var(--blue);font-weight:600}
+  button.primary:hover:not(:disabled){background:var(--blue-d);color:#fff}
+  button:disabled{opacity:.5;cursor:not-allowed}
   .alert{border-radius:8px;padding:10px 14px;margin-top:12px;font-size:13px;line-height:1.45}
   .alert.error{background:var(--err-bg);color:var(--err);border:1px solid #f3c1bd}
+  .alert.warn{background:var(--warn-bg);color:var(--warn);border:1px solid #f1d59a}
   .alert.ok{background:var(--ok-bg);color:var(--ok);border:1px solid #a9dcbf}
+  .alert.info{background:var(--info-bg);color:var(--info);border:1px solid #c3d5f3}
+  .alert.big{font-size:14.5px;padding:16px 18px;border-width:2px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+  .stat{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fff}
+  .stat .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .stat .v{font-size:17px;font-weight:600;margin-top:3px;font-variant-numeric:tabular-nums;word-break:break-word}
+  .stat.ok{border-color:#a9dcbf;background:var(--ok-bg)} .stat.ok .v{color:var(--ok)}
+  .stat.bad{border-color:#f3c1bd;background:var(--err-bg)} .stat.bad .v{color:var(--err)}
+  .stat.warnc{border-color:#f1d59a;background:var(--warn-bg)} .stat.warnc .v{color:var(--warn)}
+  .stat.info{border-color:#c3d5f3;background:var(--info-bg)} .stat.info .v{color:var(--info)}
+  .stats.compact .stat .v{font-size:15px}
+  .subhead{margin:16px 0 8px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .report-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:6px}
+  .pages{display:flex;gap:4px;background:#eef1ff;border-radius:10px;padding:4px}
+  .pages button{border:none;background:transparent;font-weight:600;color:var(--muted);padding:7px 14px}
+  .pages button.active{background:#fff;color:var(--blue-d);box-shadow:0 1px 3px rgba(20,35,138,.15)}
+  .filters{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .filters label{display:flex;align-items:center;gap:6px;font-weight:600;font-size:13px}
+  .filters select{font:inherit;padding:7px 10px;border:1px solid #c8cee0;border-radius:8px;background:#fff;min-width:110px}
+  .chip{background:#eef1ff;color:var(--blue-d);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600}
+  .modebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:10px;padding:8px 12px;background:#fafbff;border:1px solid var(--line);border-radius:10px}
+  .modebar h3{margin:0;font-size:15px;color:var(--blue-d)}
+  .chk{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer}
+  .section-title{margin:18px 0 0;font-size:13px;font-weight:700;color:var(--blue-d);text-transform:uppercase;letter-spacing:.5px}
+  .filter-slot{margin-top:16px;padding:10px 12px;background:#fafbff;border:1px solid var(--line);border-radius:10px}
+  .filter-slot:empty{display:none}
   .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;margin-top:8px;background:#fff}
-  table{border-collapse:collapse;width:100%}
-  th,td{padding:8px 12px;border-bottom:1px solid var(--line);text-align:left}
-  th{background:#f0f2fa;font-size:12px;text-transform:uppercase;color:#3b4262}
+  .table-wrap.tall{max-height:70vh}
+  /* Locked header rows: every table scrolls inside its own box, header stays visible */
+  .table-wrap{max-height:75vh}
+  .table-wrap table{border-collapse:separate;border-spacing:0}
+  .table-wrap thead th{position:sticky;top:var(--sticky-top,0);z-index:3;background-clip:padding-box}
+  .table-wrap thead th:not(.bu){background-color:#f0f2fa}
+  .table-wrap thead th.sk1,.table-wrap thead th.sk2{z-index:5}
+  table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+  th,td{padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left}
+  th,thead td{background:#f0f2fa;font-size:12px;text-transform:uppercase!important;letter-spacing:.4px;color:#3b4262}
+  td.n,th.n{text-align:right}
+  th.c,td.c{text-align:center}
+  tbody tr:hover td{background:#f7f8fe}
+  td.code{font-family:Consolas,"Courier New",monospace}
+  td.rowlab{font-weight:700;color:#3b4262;background:#f7f8fc;text-transform:uppercase;font-size:12px;letter-spacing:.3px}
+  tr.sel td{background:#eef1ff!important;font-weight:700}
+  tfoot td{font-weight:700;background:#e9ecfa;border-top:2px solid var(--blue);border-bottom:none}
+  table.pv{font-size:13px}
+  table.pv th,table.pv td{padding:7px 8px}
+  table.pv th{font-size:11px;letter-spacing:.2px}
+  table.grid8,table.eq{table-layout:fixed}
+  table.grid8 th{white-space:normal}
+  table.grid8 td,table.eq td{overflow:hidden;text-overflow:ellipsis}
+  th.bu{background:#dfe4f8;color:var(--blue-d);font-size:12px;text-transform:uppercase;letter-spacing:.3px;font-weight:700;border-left:2px solid #c3cbef;text-align:center}
+  th.bu.tot{background:#d3daf5}
+  .gs{border-left:2px solid #dfe3f3}
+  th.tot,td.tot{background:#f3f5fc}
+
+  /* SM × BU: freeze SM BU Mapping + SM Name while scrolling sideways */
+  #tvWrap{max-height:70vh}
+  #tvTable,#catTable{border-collapse:separate;border-spacing:0}
+  #catTable .sk1,#catTable .sk2{position:sticky;z-index:2}
+  #catTable .sk1{left:0;min-width:128px;max-width:128px;width:128px}
+  #catTable .sk2{left:128px;min-width:210px;max-width:210px;width:210px;overflow:hidden;text-overflow:ellipsis;box-shadow:3px 0 4px -2px rgba(20,35,138,.18)}
+  #catTable tbody .sk1,#catTable tbody .sk2{background:#fff}
+  #catTable thead th{position:sticky;top:var(--sticky-top,0);z-index:3}
+  #catTable thead .sk1,#catTable thead .sk2{z-index:4;background:#f0f2fa}
+  #catTable tfoot .sk1{background:#e9ecfa}
+  #tvTable .sk1,#tvTable .sk2{position:sticky;z-index:2}
+  #tvTable .sk1{left:0;min-width:128px;max-width:128px;width:128px}
+  #tvTable .sk2{left:128px;min-width:210px;max-width:210px;width:210px;overflow:hidden;text-overflow:ellipsis;box-shadow:3px 0 4px -2px rgba(20,35,138,.18)}
+  #tvTable tbody .sk1,#tvTable tbody .sk2{background:#fff}
+  #tvTable tbody tr:hover .sk1,#tvTable tbody tr:hover .sk2{background:#f7f8fe}
+  #tvTable thead th{position:sticky;top:var(--sticky-top,0);z-index:3}
+  #tvTable thead th.bu{background:#dfe4f8}
+  #tvTable thead .sk1,#tvTable thead .sk2{z-index:4;background:#f0f2fa}
+  #tvTable tfoot .sk1{background:#e9ecfa;min-width:338px;max-width:338px;width:338px;box-shadow:3px 0 4px -2px rgba(20,35,138,.18)}
+
+  .overach{color:#146c3f;font-weight:700}
+  .neg{color:var(--err)}
+  .muted{color:#a4a9b8}
+  .st{display:inline-block;min-width:54px;text-align:center;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:700}
+  .st.Green{background:#dff3e7;color:#146c3f}.st.Red{background:#fbe3e1;color:#a3231b}
+  .pc{display:inline-block;min-width:58px;text-align:right;border-radius:6px;padding:1px 6px;font-weight:700}
+  .pc.Green{background:#dff3e7;color:#146c3f}.pc.Red{background:#fbe3e1;color:#a3231b}
+  .overlay{position:fixed;inset:0;background:rgba(20,28,60,.45);display:flex;align-items:center;justify-content:center;z-index:50}
+  .ov-box{background:#fff;border-radius:12px;padding:22px 28px;min-width:320px;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+  .spinner{width:34px;height:34px;border:4px solid #dfe3f3;border-top-color:var(--blue);border-radius:50%;margin:0 auto 12px;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .bar{height:6px;background:#e7eaf5;border-radius:4px;overflow:hidden;margin-top:12px}
+  .bar-fill{height:100%;width:0;background:var(--blue);transition:width .25s}
+  #ovText{font-weight:600}
+  .menu-btn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.35);font-weight:600}
+  .menu-btn:hover:not(:disabled){background:rgba(255,255,255,.26);color:#fff;border-color:#fff}
+  .menu-btn.signout:hover:not(:disabled){background:#fff;color:var(--blue-d)}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#ff5a4e;margin-left:6px;vertical-align:middle}
+  .drawer-bg{position:fixed;inset:0;background:rgba(20,28,60,.35);z-index:40}
+  .drawer{position:fixed;top:0;right:0;height:100vh;width:min(920px,96vw);background:var(--bg);z-index:41;box-shadow:-8px 0 30px rgba(0,0,0,.18);transform:translateX(105%);transition:transform .22s ease;display:flex;flex-direction:column}
+  .drawer.open{transform:none}
+  .drawer-head{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:#fff;border-bottom:1px solid var(--line)}
+  .tabs{display:flex;gap:6px}
+  .tab{border:none;background:transparent;padding:8px 14px;border-radius:8px;font-weight:600;color:var(--muted)}
+  .tab.active{background:#eef1ff;color:var(--blue-d)}
+  .x{border:none;font-size:18px;padding:4px 10px}
+  .drawer-body{padding:18px;overflow:auto;flex:1}
+  .drawer-body .table-wrap.tall{max-height:calc(100vh - 150px)}
+  .form-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+  .field{display:flex;flex-direction:column;gap:5px}
+  .field label{font-weight:600;font-size:13px}
+  .field input,.field select{font:inherit;padding:8px 10px;border:1px solid #c8cee0;border-radius:8px;background:#fff;min-width:200px}
+  .field input.pin{min-width:130px;letter-spacing:4px;font-family:Consolas,monospace}
+  .banner{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#eef1ff;border-color:#c9d1f7}
+  .banner b{color:var(--blue-d)}
+  details.val{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fafbff}
+  details.val summary{cursor:pointer;font-weight:600;color:var(--blue-d)}
+  .empty{padding:28px;text-align:center;color:var(--muted)}
 </style>
+<link rel="stylesheet" href="table-premium.css?v=20261019h">
+<link rel="stylesheet" href="itbooster.css?v=3">
+<link rel="stylesheet" href="auth.css?v=3">
+<link rel="stylesheet" href="memo.css?v=1">
 </head>
 <body class="mv itb-locked">
 <header class="topbar">
   <h1>IT BOOSTER</h1>
   <nav class="navbar hidden" id="navBar">
-    <div class="nav-item"><button class="nav-btn active" id="navUpload" type="button">Upload & Report</button></div>
-    <div class="nav-item"><button class="nav-btn" id="navMemoTab" type="button">Memo Skipper (Custom Filter)</button></div>
+    <div class="nav-item">
+      <button class="nav-btn nav-upload" id="navUpload" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>Upload</button>
+    </div>
+    <div class="nav-item" id="navSalesItem">
+      <button class="nav-btn active" id="navSales" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Sales ▾</button>
+      <div class="nav-menu"><button id="pgSummary" class="active" type="button">SM BU Summary</button><button id="pgTarget" type="button">BU × TDP Target vs Achievement</button><button id="pgCat" type="button">Category × TDP Target vs Achievement</button></div>
+    </div>
+    <div class="nav-item" id="navStockItem">
+      <button class="nav-btn" id="navStock" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7M12 11v10"/></svg>Stock</button>
+      <button id="pgStock" type="button" hidden>Closing Stock</button>
+    </div>
+      <div class="nav-item">
+      <button class="nav-btn" id="navOrder" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h2l2.4 11.2a1 1 0 0 0 1 .8h9.2a1 1 0 0 0 1-.8L21 8H6.2"/><circle cx="9" cy="20" r="1.4"/><circle cx="17" cy="20" r="1.4"/></svg>Today's Order</button>
+    </div>
+    <div class="nav-item">
+      <button class="nav-btn" id="navCredit" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Payout</button>
+    </div>
+    <div class="nav-item">
+      <button class="nav-btn" id="navAlloc" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/></svg>Allocation</button>
+    </div>
+    <div class="nav-item">
+      <button class="nav-btn" id="navIq" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 13l4 4L20 5"/><path d="M4 6h7M4 20h16"/></svg>IQ</button>
+    </div>
+    <div class="nav-item">
+      <button class="nav-btn" id="navMemo" type="button"><svg class="nic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/><path d="M9 8h6M9 12h6M9 16h3"/></svg>Memo Skipper</button>
+    </div>
   </nav>
   <div class="top-actions">
+    <button id="menuBtn" class="menu-btn hidden">☰ Details<i id="menuDot" class="dot hidden"></i></button>
     <button id="signOutBtn" class="menu-btn signout hidden">⎋ Sign out</button>
   </div>
 </header>
 <main>
-  <!-- Main Report & Upload Section -->
-  <section class="card" id="inputCard">
-    <h2>Upload Data & Reports</h2>
-    <div class="grid5">
-      <label class="drop" id="drop1"><input type="file" id="file1" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt"><div class="drop-title">File 1 — Customer Listing</div><div class="drop-file" id="file1name">No file chosen</div></label>
-      <label class="drop" id="drop2"><input type="file" id="file2" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt"><div class="drop-title">File 2 — Sales Analysis</div><div class="drop-file" id="file2name">No file chosen</div></label>
+  <section class="card" id="viewCard">
+    <h2>View published data</h2>
+    <div class="form-row">
+      <div class="field"><label for="viewTown">Town name</label><select id="viewTown"><option value="">Loading towns…</option></select></div>
+      <div class="field"><label for="viewPin">6-digit PIN</label><input id="viewPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="••••••"></div>
+      <button id="viewBtn" class="primary" disabled>View</button>
+      <button id="refreshTowns" title="Reload town list">↻</button>
     </div>
-    <div class="actions"><button id="buildBtn" class="primary" disabled>Build report</button></div>
+    <div id="viewMsg" class="alert hidden"></div>
+    <div class="new-upload">New town or first upload? <a id="openUpload">Upload data →</a></div>
   </section>
 
-  <!-- Integrated Memo Skipper Section with Custom Delivery & Order Date Filter -->
-  <section class="card hidden" id="memoSkipperCard">
-    <h2>Memo Skipper & Custom Date Filter</h2>
-    <p class="hint">এখানে প্রথম তারিখটি ডেলিভারি তারিখ (Delivery Date) এবং নিচের তারিখটি অর্ডার তারিখ (Order Date) হিসেবে ফিল্টার করবে।</p>
-    <div class="actions" style="background:#fafbff; padding:12px; border-radius:10px; border:1px solid var(--line);">
-      <label>Delivery Date (From): <input type="date" id="mDeliveryFrom" style="padding:6px; border-radius:6px; border:1px solid #c8cee0;"></label>
-      <label>Delivery Date (To): <input type="date" id="mDeliveryTo" style="padding:6px; border-radius:6px; border:1px solid #c8cee0;"></label>
-      <button id="mFilterBtn" class="primary">Filter Memos</button>
+  <section class="card banner hidden" id="viewBanner"><div id="bannerText"></div><button id="closeView">Close</button></section>
+
+  <section class="card" id="inputCard">
+    <h2>Upload data</h2>
+    <div class="grid5">
+      <label class="drop" id="drop1"><input type="file" id="file1" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt">
+        <div class="drop-title">File 1 — Customer Listing</div><div class="drop-hint">.xlsx or .csv · other towns are ignored</div><div class="drop-file" id="file1name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm1">✕ Remove</button></label>
+      <label class="drop" id="drop2"><input type="file" id="file2" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt">
+        <div class="drop-title">File 2 — Sales Analysis</div><div class="drop-hint">.xlsx or .csv</div><div class="drop-file" id="file2name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm2">✕ Remove</button></label>
+      <label class="drop" id="drop3"><input type="file" id="file3" accept=".xlsx,.xlsm,.xls,.xlsb">
+        <div class="drop-title">File 3 — Salesman BU Target <small>(for targets)</small></div><div class="drop-hint">.xlsx · only TDP targets are read</div><div class="drop-file" id="file3name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm3">✕ Remove</button></label>
+      <label class="drop" id="drop4"><input type="file" id="file4" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt">
+        <div class="drop-title">File 4 — Closing Stock Extract <small>(Winter SKUs + Closing Stock page)</small></div><div class="drop-hint">.xlsx or .csv · Sound stock only</div><div class="drop-file" id="file4name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm4">✕ Remove</button></label>
+      <label class="drop" id="drop5"><input type="file" id="file5" accept=".csv,.txt,.xlsx,.xlsm,.xls,.xlsb">
+        <div class="drop-title">File 5 — Today's Order <small>(Order Invoice &amp; Returns report)</small></div><div class="drop-hint">.csv or .xlsx · re-upload anytime for the latest orders</div><div class="drop-file" id="file5name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm5">✕ Remove</button></label>
+      <label class="drop" id="drop6"><input type="file" id="file6" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt">
+        <div class="drop-title">File 6 — Payout <small>(Credit Note Adjustment Report)</small></div><div class="drop-hint">.xlsx or .csv · Utilized / Pending payout by order booker &amp; route</div><div class="drop-file" id="file6name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm6">✕ Remove</button></label>
+      <label class="drop" id="drop7"><input type="file" id="file7" accept=".xlsx,.xlsm,.xls,.xlsb">
+        <div class="drop-title">File 7 — Monthly Allocation <small>(Town × SKU Allocation)</small></div><div class="drop-hint">.xlsx · upload once a month · target at TP, matched by base pack</div><div class="drop-file" id="file7name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm7">✕ Remove</button></label>
+      <label class="drop" id="drop8"><input type="file" id="file8" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt">
+        <div class="drop-title">File 8 — IQ <small>(IQ Compliance by PJP Report)</small></div><div class="drop-hint">.xlsx · IQ Published, Achieved &amp; Threshold by Sales Officer</div><div class="drop-file" id="file8name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm8">✕ Remove</button></label>
+      <label class="drop" id="drop9"><input type="file" id="file9" accept=".xlsx,.xlsm,.xls,.xlsb,.csv,.txt">
+        <div class="drop-title">File 9 — FSE Mapping <small>(EFOS PJP View)</small></div><div class="drop-hint">.xlsx · PJP → Team Leader (FSE) · upload when the team changes</div><div class="drop-file" id="file9name">No file chosen</div><button type="button" class="drop-rm hidden" id="rm9">✕ Remove</button></label>
+      <div class="datebox">
+        <label for="combinedDate">Combined Date <small>(optional — leave blank if the PJP changeover has not happened yet)</small></label>
+        <div class="date-row"><input type="date" id="combinedDate"><button id="clearDate" type="button" disabled>✕</button></div>
+        <div class="hint" id="dateHint"></div>
+      </div>
     </div>
-    <div class="table-wrap">
-      <table id="memoTable">
-        <thead>
-          <tr>
-            <th>Memo No</th>
-            <th>Delivery Date (Top)</th>
-            <th>Order Date (Bottom)</th>
-            <th>Customer / Town</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody id="memoTableBody">
-          <tr><td colspan="5" style="text-align:center; color:var(--muted);">কোনো মেমো ডাটা লোড হয়নি।</td></tr>
-        </tbody>
-      </table>
+    <div class="actions"><button id="buildBtn" class="primary" disabled>Build report</button><span class="hint" id="inputMsg" style="flex-basis:100%">Select File 1 and File 2.</span></div>
+    <div id="errorBox" class="alert error hidden"></div>
+  </section>
+
+  <section class="card hidden" id="publishCard">
+    <h2>Publish</h2>
+    <div class="form-row">
+      <div class="field"><label for="pubTown">Town name</label><input id="pubTown" type="text"></div>
+      <div class="field"><label for="pubPin">Set 6-digit PIN</label><input id="pubPin" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="••••••"></div>
+      <div class="field"><label for="pubPin2">Confirm PIN</label><input id="pubPin2" class="pin" type="password" inputmode="numeric" maxlength="6" autocomplete="new-password" placeholder="••••••"></div>
+      <button id="publishBtn" class="primary">Publish</button>
     </div>
+    <div class="hint" style="margin-top:8px">Anyone with the town name and this PIN can view the report. Publishing again with the same town and PIN replaces the old data.</div>
+    <div id="pubMsg" class="alert hidden"></div>
+    <div class="built-row"><span class="hint">Report is built.</span><button id="goReport" type="button">Open report → SM BU Summary</button></div>
+  </section>
+
+  <section class="card hidden" id="reportCard">
+    <div class="report-head" id="reportHead">
+      <div class="crumb" id="pageCrumb"><span>Sales ›</span> SM BU Summary</div>
+      <div class="filters" id="filtersBox">
+        <label id="fseLab" class="hidden">FSE <select id="fseSel"></select></label>
+        <label>TDP Period <select id="tdpSel"></select></label>
+        <label>Till Day <select id="tillSel"></select></label>
+        <span class="chip" id="windowChip"></span>
+        <button id="exportBtn">Export .xlsx</button>
+      </div>
+    </div>
+    <div class="modebar" id="modeBar">
+      <h3 id="townLabel">Town: —</h3>
+      <label class="chk hidden" id="townPick">Town <select id="townSel"></select></label>
+      <label class="chk hidden" id="hideZeroWrap"><input type="checkbox" id="hideZero" checked> Hide zero-target rows</label>
+    </div>
+    <div id="windowNotice" class="alert warn hidden"></div>
+
+    <div id="pageSummary">
+      <div id="smWarnings"></div>
+      <div class="section-title">TDP-wise summary</div>
+      <div class="table-wrap">
+        <table id="tdpTable" class="pv grid8"><colgroup><col style="width:11%"><col style="width:19%"><col style="width:11%"><col style="width:11%"><col style="width:9%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:9%"></colgroup>
+          <thead><tr><th>Period</th><th>Days</th><th class="n">Target</th><th class="n">Achievement</th><th class="n">Ach %</th><th class="n">Balance</th><th class="c">Status</th><th class="n">Winter Achievement</th><th class="n">Winter %</th></tr></thead>
+          <tbody></tbody></table>
+      </div>
+      <div class="filter-slot" id="smFilterSlot"></div>
+      <div class="section-title">SM-wise</div>
+      <div class="table-wrap">
+        <table id="summaryTable" class="pv grid8"><colgroup><col style="width:11%"><col style="width:19%"><col style="width:11%"><col style="width:11%"><col style="width:9%"><col style="width:10%"><col style="width:8%"><col style="width:12%"><col style="width:9%"></colgroup>
+          <thead><tr><th>SM BU Mapping</th><th>SM Name</th><th class="n" id="smPeriodHead">Target</th><th class="n">Achievement</th><th class="n">Ach %</th><th class="n">Balance</th><th class="c">Status</th><th class="n">Winter Achievement</th><th class="n">Winter %</th></tr></thead>
+          <tbody></tbody><tfoot></tfoot></table>
+      </div>
+    </div>
+
+    <div id="pageTarget" class="hidden">
+      <div id="tvWarnings"></div>
+      <div id="tvBody">
+        <div class="section-title">BU-wise summary</div>
+        <div class="table-wrap"><table id="buSumTable" class="pv eq"><thead></thead><tbody></tbody></table></div>
+        <div class="section-title">SM × BU</div>
+        <div class="table-wrap" id="tvWrap"><table id="tvTable" class="pv"><thead></thead><tbody></tbody><tfoot></tfoot></table></div>
+      </div>
+      <details class="val" id="tvValBox"><summary>Validation panel</summary><div class="stats compact" id="tvVal" style="margin-top:10px"></div></details>
+    </div>
+
+    <div id="pageCat" class="hidden"><div id="catBody"></div></div>
+    <div id="pageStock" class="hidden">
+      <div id="sdEmpty" class="alert info big hidden"></div>
+      <div id="sdBody">
+        <div class="sd-head" id="sdHead"></div>
+        <div class="sd-kpis" id="sdKpis"></div>
+        <div class="sd-bar">
+          <div class="sd-row">
+            <span class="sd-lab">Stock type</span>
+            <div class="sd-grp" id="sdLoc"><button class="sd-tg" data-v="closing">Closing Stock</button><button class="sd-tg" data-v="transit">In Transit</button><button class="sd-tg" data-v="both">Both</button></div>
+            <span class="sd-lab">Price format</span>
+            <div class="sd-grp" id="sdPrice"><button class="sd-tg" data-v="LP">LP Per PC</button><button class="sd-tg" data-v="TP">Trade Price Per PC</button></div>
+            <button id="sdClear" class="sd-spacer">Clear Selection</button>
+          </div>
+          <div class="sd-chips" id="sdChips"></div>
+        </div>
+        <div class="sd-scope hidden" id="sdScope"><span>Viewing:</span><span id="sdCrumbs"></span><button id="sdScopeClear">✕ Clear</button></div>
+        <div class="section-title">Stock value by Business Unit <span class="sd-hint" id="sdChartHint"></span></div>
+        <div class="sd-chartwrap"><canvas id="sdChart"></canvas></div>
+        <div class="section-title">Level 1 · Business Unit</div>
+        <div class="table-wrap"><table id="sdBU" class="pv"><thead><tr><th>Business Unit</th><th class="n">CS</th><th class="n">PC</th><th class="n">Total PC</th><th class="n">Value (৳)</th></tr></thead><tbody></tbody></table></div>
+        <div class="sd-sectionhead"><div class="section-title">Level 2 · Category</div><span class="sd-hint" id="sdCatHint"></span></div>
+        <div class="table-wrap"><table id="sdCat" class="pv"><thead><tr><th>Category</th><th class="n">CS</th><th class="n">PC</th><th class="n">Total PC</th><th class="n">Value (৳)</th></tr></thead><tbody></tbody></table></div>
+        <div class="sd-sectionhead"><div class="section-title">Level 3 · Brand</div><span class="sd-hint" id="sdBrandHint"></span></div>
+        <div class="table-wrap"><table id="sdBrand" class="pv"><thead><tr><th>Brand</th><th class="n">CS</th><th class="n">PC</th><th class="n">Total PC</th><th class="n">Value (৳)</th></tr></thead><tbody></tbody></table></div>
+        <div id="sdSkuCard">
+          <div class="sd-sectionhead"><div class="section-title">Level 4 · SKU (<span id="sdSkuCount">0</span> SKUs)</div>
+            <div class="sd-tools"><label class="chk"><input type="checkbox" id="sdZeroOnly"> Show only zero-stock SKUs</label><input type="text" id="sdSearch" placeholder="Search product / code…"><button id="sdExport">Export .xlsx</button></div></div>
+          <div class="table-wrap tall"><table id="sdSku" class="pv"><thead><tr><th data-k="cat">Category</th><th data-k="brand">Brand</th><th data-k="pname">Product</th><th class="n" data-k="pack">Pack</th><th class="n" data-k="cs">CS</th><th class="n" data-k="pc">PC</th><th class="n" data-k="pieces">Total PC</th><th class="n" data-k="price">Price/PC</th><th class="n" data-k="val">Value (৳)</th></tr></thead><tbody></tbody></table></div>
+          <div class="sd-pager"><span id="sdPageInfo"></span><div><button id="sdPrev">‹ Prev</button><button id="sdNext">Next ›</button></div></div>
+        </div>
+        <div class="alert warn sd-zerobar hidden" id="sdZero"><span id="sdZeroTxt"></span><button id="sdZeroBtn">View zero-stock list ↑</button></div>
+        <div class="alert ok"><div class="sd-imp"><span><b>Import summary</b> · <span id="sdImport"></span></span><button id="sdImportToggle">Show details</button></div><div class="sd-impdet hidden" id="sdImportDetails"></div></div>
+      </div>
+    </div>
+  </section>
+  <section class="card hidden" id="iqCard">
+    <div class="iq-head"><h2>IQ — Sales Officer-wise</h2><div id="iqMeta"></div></div>
+    <div id="iqBody"></div>
+  </section>
+  <section class="card hidden" id="allocCard">
+    <div class="al-head"><h2>Allocation vs Achievement</h2><div id="allocMeta"></div></div>
+    <div id="allocBody"></div>
+  </section>
+  <section class="card hidden" id="creditCard">
+    <div class="cn-head"><h2>Payout</h2><div id="creditMeta"></div></div>
+    <div id="creditBody"></div>
+  </section>
+  <section class="card hidden" id="orderCard">
+    <div class="od-head"><h2>Today's Order</h2><div id="orderMeta"></div></div>
+    <div id="orderBody"></div>
+  </section>
+
+  <section class="ms-root" id="memoCard" aria-label="Memo Skipper">
+    <div class="ms-head">
+      <div><h2>Memo Skipper</h2><p class="ms-sub">Scan the delivery memo PDFs, skip small memos, and print the rest.</p></div>
+      <div class="ms-head-r">
+        <button class="ms-btn ms-sec ms-sm ms-hidden" id="ms_again" type="button">Scan other files</button>
+        <label class="ms-min" title="Memos below this amount are skipped (not printed by default)">Skip below ৳<input id="ms_minAmt" type="number" min="0" step="1" inputmode="decimal"></label>
+        <button class="ms-btn ms-sec ms-sm" id="ms_openMaster" type="button">Master data</button>
+      </div>
+    </div>
+
+    <section class="ms-card" id="ms_upCard">
+      <h2>Scan memo PDFs</h2>
+      <p class="ms-sub">Select the delivery PDFs. <b>The file name is the delivery man's code</b> (for example <b>86.pdf</b>). Memos below the amount above are skipped; damage and payout memos are always kept. Everything runs in your browser; the PDFs are not uploaded.</p>
+      <div class="ms-up">
+        <div>
+          <div class="ms-drop" id="ms_drop">Click here or drag &amp; drop PDF files<small>e.g. 7.pdf, 86.pdf</small></div>
+          <input type="file" id="ms_pdfInput" accept="application/pdf" multiple class="ms-hidden">
+          <div class="ms-fileinfo" id="ms_fileInfo"></div>
+        </div>
+        <div style="display:flex;align-items:flex-end"><button class="ms-btn" id="ms_scanBtn" type="button" style="width:100%;min-height:46px">Scan &amp; process memos</button></div>
+      </div>
+    </section>
+
+    <section class="ms-card ms-hidden" id="ms_progCard">
+      <h2>Processing memos…</h2>
+      <p class="ms-sub" id="ms_progText">Starting</p>
+      <div class="ms-prog"><i id="ms_progBar"></i></div>
+    </section>
+
+    <div class="ms-kpis ms-hidden" id="ms_kpis"></div>
+    <div class="ms-gf ms-hidden" id="ms_gf">
+      <label>Order date<select id="ms_gOrder"></select></label>
+      <label>Delivery date<select id="ms_gDeliv"></select></label>
+      <span class="ms-gfn">Under the memo number: the first date is the <b>delivery</b> date, the date below it is the <b>order</b> date. The filter applies to every delivery man; you can also change it for one delivery man.</span>
+    </div>
+    <div id="ms_results"></div>
+
+    <section class="ms-card" id="ms_recCard">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+        <div><h2>Daily record</h2><p class="ms-sub" style="margin-bottom:10px">Memos you processed and skipped each day, saved automatically (last 30 days, Bangladesh time).</p></div>
+        <button class="ms-btn ms-sm ms-sec" id="ms_recRefresh" type="button">Refresh</button>
+      </div>
+      <div id="ms_recBody"><div class="ms-empty">Loading…</div></div>
+    </section>
+    <p class="ms-note">Delivery-man and outlet lists are saved in this browser only.</p>
+
+    <div class="ms-ov" id="ms_mdOv">
+      <div class="ms-md">
+        <div class="ms-mh"><h3>Master data</h3><button class="ms-x" id="ms_mdClose" type="button" aria-label="Close">&times;</button></div>
+        <div class="ms-seg"><button id="ms_mdTabDm" class="ms-on" type="button">Delivery men</button><button id="ms_mdTabOl" type="button">Outlets</button></div>
+        <div class="ms-row">
+          <label class="ms-fld" style="flex:1;min-width:110px">Code<input id="ms_mdCode" placeholder="e.g. 86"></label>
+          <label class="ms-fld" style="flex:2;min-width:170px">Name<input id="ms_mdName" placeholder="Full name"></label>
+          <button class="ms-btn ms-sm" id="ms_mdAdd" type="button">+ Add / update</button>
+          <button class="ms-btn ms-sm ms-sec" id="ms_mdUp" type="button">Upload CSV</button>
+          <button class="ms-btn ms-sm ms-sec" id="ms_mdSample" type="button">Sample CSV</button>
+          <input type="file" id="ms_mdFile" accept=".csv,text/csv" class="ms-hidden">
+        </div>
+        <p class="ms-sub" style="margin-bottom:10px">CSV: one row per line as <b>code,name</b> (save Excel as “CSV UTF-8”). Uploading adds new rows and updates existing codes.</p>
+        <div class="ms-row" style="justify-content:space-between;align-items:center">
+          <input class="ms-srch" id="ms_mdSearch" placeholder="Search code or name…" style="max-width:240px">
+          <span class="ms-mst" id="ms_mdInfo" style="margin:0"></span>
+          <button class="ms-btn ms-sm ms-danger" id="ms_mdClear" type="button">Clear all</button>
+        </div>
+        <div class="ms-mscroll"><table><thead><tr><th style="width:130px">Code</th><th>Name</th><th style="width:60px"></th></tr></thead><tbody id="ms_mdBody"></tbody></table></div>
+        <div class="ms-mst" id="ms_mdStatus"></div>
+      </div>
+    </div>
+    <iframe id="ms_printFrame" class="ms-hidden" title="print"></iframe>
   </section>
 </main>
 
+<div id="drawerBg" class="drawer-bg hidden"></div>
+<aside id="drawer" class="drawer">
+  <div class="drawer-head">
+    <div class="tabs">
+      <button class="tab active" data-tab="tabStatus">Data status<i id="tabDot" class="dot hidden"></i></button>
+      <button class="tab" data-tab="tabWinter">Winter SKUs</button>
+      <button class="tab" data-tab="tabMapping">Component mapping</button>
+    </div>
+    <button id="drawerClose" class="x">✕</button>
+  </div>
+  <div class="drawer-body">
+    <div id="tabStatus" class="tab-pane"><div class="stats" id="statusStats"></div><div id="statusAlerts"></div><div class="subhead">Reconciliation</div><div class="stats" id="reconStats"></div></div>
+    <div id="tabWinter" class="tab-pane hidden"><div class="stats" id="winterStats"></div><div id="winterAlerts"></div><div class="subhead">Extra Winter SKU codes found in Closing Stock (not in the fixed list)</div><div class="table-wrap tall"><table id="winterTable"></table></div></div>
+    <div id="tabMapping" class="tab-pane hidden"><div class="hint" id="mapCount"></div><div class="table-wrap tall"><table id="mappingTable"></table></div></div>
+  </div>
+</aside>
+<div id="overlay" class="overlay hidden"><div class="ov-box"><div class="spinner"></div><div id="ovText">Working…</div><div class="bar"><div class="bar-fill" id="ovBar"></div></div></div></div>
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Simple Tab switching for Demo
-  const navMemo = document.getElementById('navMemoTab');
-  const navUpload = document.getElementById('navUpload');
-  const inputCard = document.getElementById('inputCard');
-  const memoCard = document.getElementById('memoSkipperCard');
-
-  if(navMemo) {
-    navMemo.addEventListener('click', () => {
-      navMemo.classList.add('active');
-      navUpload.classList.remove('active');
-      memoCard.classList.remove('hidden');
-      inputCard.classList.add('hidden');
-    });
-  }
-
-  if(navUpload) {
-    navUpload.addEventListener('click', () => {
-    n  navUpload.classList.add('active');
-      navMemo.classList.remove('active');
-      inputCard.classList.remove('hidden');
-      memoCard.classList.add('hidden');
-    });
-  }
-
-  // Custom Memo Filter Logic (Delivery Date & Order Date)
-  const filterBtn = document.getElementById('mFilterBtn');
-  if(filterBtn) {
-    filterBtn.addEventListener('click', () => {
-      const dFrom = document.getElementById('mDeliveryFrom').value;
-      const dTo = document.getElementById('mDeliveryTo').value;
-      
-      // এখানে আপনার মেমো ডাটা অ্যারে ফিল্টার হবে
-      alert('ফিল্টার সফল হয়েছে! ডেলিভারি ডেট: ' + dFrom + ' থেকে ' + dTo);
-    });
-  }
-});
+/* second half of the application code (needs the page to be parsed first) — again only with a login session */
+(function () {
+  if (!window.ITB_APP_LOADED) return;
+  ["app.js?v=20261019f", "table-premium.js?v=20261019h", "table-picture.js?v=1"].forEach(function (f) { document.write('<script src="' + f + '"><\/script>'); });
+})();
 </script>
 </body>
 </html>
